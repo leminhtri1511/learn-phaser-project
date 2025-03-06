@@ -20,7 +20,7 @@ export default class MainScene extends Phaser.Scene {
     create() {
         // Thêm nền trời
         this.add.image(180, 320, 'sky');
-        
+
         // Tạo mặt đất
         let ground = this.physics.add.staticGroup();
         let groundTile = ground.create(180, 620, 'ground');
@@ -34,6 +34,11 @@ export default class MainScene extends Phaser.Scene {
 
         // Tạo kẻ địch
         this.enemy = new Enemy(this, this.scale.width - 50, 550);
+
+
+        // Biến quản lý máu nhân vật
+        this.playerHP = 3; // Nhân vật có 3 máu ban đầu
+        this.hpText = this.add.text(16, 40, 'HP: ' + this.playerHP, { fontSize: '20px', fill: '#fff' });
 
         // Xử lý va chạm giữa các đối tượng
         this.physics.add.collider(this.player, ground);
@@ -52,15 +57,32 @@ export default class MainScene extends Phaser.Scene {
 
 
     hitEnemy(player, enemy) {
-        console.log("Nhân vật chạm kẻ địch!");
-        player.setTint(0xff0000); // Nhân vật chuyển sang màu đỏ khi va chạm
-        player.setVelocity(0, 0); // Dừng di chuyển
-        this.physics.pause(); // Dừng game (có thể thay đổi thành trừ điểm hoặc mất mạng sau này)
+        if (this.playerHP > 1) {
+            this.playerHP--; // Giảm máu của nhân vật
+            this.hpText.setText('HP: ' + this.playerHP); // Cập nhật hiển thị máu
+            console.log(`Nhân vật bị tấn công! Máu còn lại: ${this.playerHP}`);
+
+            // Nhân vật bị đẩy lùi khi trúng đòn
+            player.setTint(0xff0000);
+            player.setVelocityY(-200);
+            this.time.delayedCall(500, () => { player.clearTint(); }, [], this);
+        } else {
+            // Nếu máu về 0, dừng game
+            this.playerHP = 0;
+            this.hpText.setText('HP: 0');
+            console.log("Nhân vật đã hết máu! Game Over!");
+            player.setTint(0xff0000);
+            player.setVelocity(0, 0);
+            this.isGameOver = true;
+        }
     }
 
+
     update() {
-        this.player.update(); // Cập nhật di chuyển nhân vật
-        this.enemy.update(); // Cập nhật kẻ địch
+        if (!this.isGameOver) {
+            this.player.update();
+        }
+        this.enemy.update();
         // this.stars.update(); // Cập nhật sao (để xóa khi rơi khỏi màn hình)
     }
 }
