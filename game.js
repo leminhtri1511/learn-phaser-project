@@ -12,7 +12,7 @@ const config = {
         default: 'arcade',
         arcade: {
             gravity: { y: 500 },
-            debug: true
+            debug: false
         }
     },
     scene: [MainScene] // Load scene chính
