@@ -49,7 +49,8 @@ export default class MainScene extends Phaser.Scene {
         this.physics.add.collider(this.enemy, ground);
         this.physics.add.collider(this.player, this.enemy, this.handlePlayerEnemyCollision, null, this);
 
-
+        // Thêm nút điều khiển
+        this.addMobileControls();
 
         // Xử lý khi nhân vật thu thập vật phẩm
         // this.physics.add.overlap(this.player, this.stars.group, (player, star) => {
@@ -103,20 +104,20 @@ export default class MainScene extends Phaser.Scene {
     handlePlayerEnemyCollision(player, enemy) {
         if (player.body.velocity.y > 0 && player.body.bottom < enemy.body.top + 5) {
             console.log("💥 Kẻ địch bị tiêu diệt!");
-    
+
             // Vô hiệu hóa va chạm để tránh lỗi tiếp tục va chạm sau khi bị tiêu diệt
             enemy.body.enable = false;
-    
+
             // Xóa kẻ địch khỏi game
             enemy.destroy();
-    
+
             // Phản hồi cho nhân vật: bật lên nhẹ
             player.setVelocityY(-200);
-    
+
             // Tăng điểm số
             this.score += 10;
             this.scoreText.setText('Score: ' + this.score);
-    
+
             // Kiểm tra nếu tất cả kẻ địch đã bị tiêu diệt
             let enemiesLeft = this.children.getChildren().some(child => child instanceof Enemy);
             if (!enemiesLeft) {
@@ -126,7 +127,40 @@ export default class MainScene extends Phaser.Scene {
             this.hitEnemy(player, enemy);
         }
     }
-    
+
+    addMobileControls() {
+        // Kích thước nút
+        let buttonSize = 60;
+
+        // Nút di chuyển trái
+        let leftButton = this.add.rectangle(50, 580, buttonSize, buttonSize, 0x6666ff)
+            .setInteractive()
+            .setAlpha(0.8);
+        leftButton.on('pointerdown', () => { this.player.setVelocityX(-160); });
+        leftButton.on('pointerup', () => { this.player.setVelocityX(0); });
+
+        // Nút di chuyển phải
+        let rightButton = this.add.rectangle(130, 580, buttonSize, buttonSize, 0x6666ff)
+            .setInteractive()
+            .setAlpha(0.8);
+        rightButton.on('pointerdown', () => { this.player.setVelocityX(160); });
+        rightButton.on('pointerup', () => { this.player.setVelocityX(0); });
+
+        // Nút nhảy
+        let jumpButton = this.add.rectangle(310, 580, buttonSize, buttonSize, 0xff6666)
+            .setInteractive()
+            .setAlpha(0.8);
+        jumpButton.on('pointerdown', () => {
+            if (this.player.body.touching.down) {
+                this.player.setVelocityY(-400);
+            }
+        });
+
+        // Hiển thị chữ trên nút
+        this.add.text(40, 570, '←', { fontSize: '30px', fill: '#fff' });
+        this.add.text(120, 570, '→', { fontSize: '30px', fill: '#fff' });
+        this.add.text(300, 570, '↑', { fontSize: '30px', fill: '#fff' });
+    }
 
     youWon() {
         if (this.isGameOver) return; // Nếu game đã kết thúc, không làm gì nữa
@@ -192,29 +226,29 @@ export default class MainScene extends Phaser.Scene {
 
     restartGame() {
         console.log("🔄 Restarting game...");
-    
+
         // Reset trạng thái game
         this.isGameOver = false;
         this.isHit = false;
         this.playerHP = 3;
-    
+
         // Xóa văn bản Game Over và nút Restart nếu có
         this.children.each((child) => {
             if (child.type === "Text") {
                 child.destroy();
             }
         });
-    
+
         // Bật lại vật lý
         this.physics.resume();
-    
+
         // Reset hiển thị máu
         this.hpText.setText('HP: ' + this.playerHP);
-    
+
         // Reset nhân vật
         this.player.setPosition(50, 550);
         this.player.setTint(0xffffff);
-    
+
         // Xóa và tạo lại enemy
         if (this.enemy) {
             this.enemy.destroy();
@@ -222,10 +256,10 @@ export default class MainScene extends Phaser.Scene {
         this.enemy = new Enemy(this, this.scale.width - 50, 550);
         this.physics.add.collider(this.enemy, this.ground);
         this.physics.add.collider(this.player, this.enemy, this.handlePlayerEnemyCollision, null, this);
-    
+
         console.log("✅ Game restarted!");
     }
-    
+
 
     update() {
         if (!this.isGameOver) {
