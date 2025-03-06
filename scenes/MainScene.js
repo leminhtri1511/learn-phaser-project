@@ -62,21 +62,42 @@ export default class MainScene extends Phaser.Scene {
             this.hpText.setText('HP: ' + this.playerHP); // Cập nhật hiển thị máu
             console.log(`Nhân vật bị tấn công! Máu còn lại: ${this.playerHP}`);
 
-            // Nhân vật bị đẩy lùi khi trúng đòn
+            // Rung màn hình khi bị tấn công
+            this.cameras.main.shake(80, 0.01);
+
+            // Xác định hướng va chạm dựa trên hướng di chuyển của kẻ địch
+            let knockBackDirection = (enemy.body.velocity.x > 0) ? 1 : -1; // Nếu enemy đi phải -> knockBack trái, ngược lại
+            player.setVelocityX(knockBackDirection * 200); // Đẩy nhân vật ra xa theo hướng ngược lại
+            enemy.setVelocityX(-knockBackDirection * 200); // Đẩy kẻ địch ngược lại để tạo phản lực
+
+            // Cả hai bị đẩy lên nhẹ để tạo cảm giác va chạm mạnh
+            player.setVelocityY(-150);
+            enemy.setVelocityY(-100);
+
+            // Nhấp nháy nhân vật sau khi bị đánh
             player.setTint(0xff0000);
-            player.setVelocityY(-200);
-            this.time.delayedCall(500, () => { player.clearTint(); }, [], this);
+            enemy.setTint(0xff0000);
+            this.time.delayedCall(500, () => {
+                player.clearTint();
+                enemy.clearTint();
+            }, [], this);
         } else {
             // Nếu máu về 0, dừng game
             this.playerHP = 0;
             this.hpText.setText('HP: 0');
             console.log("Nhân vật đã hết máu! Game Over!");
+
+            // Rung màn hình mạnh hơn khi chết
+            this.cameras.main.shake(150, 0.02);
+
             player.setTint(0xff0000);
             player.setVelocity(0, 0);
+
+            // Dừng enemy di chuyển
+            enemy.setVelocity(0, 0);
             this.isGameOver = true;
         }
     }
-
 
     update() {
         if (!this.isGameOver) {
