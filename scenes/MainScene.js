@@ -25,14 +25,14 @@ export default class MainScene extends Phaser.Scene {
 
         // Tạo mặt đất
         let ground = this.physics.add.staticGroup();
-        let groundTile = ground.create(180, 620, 'ground');
-        groundTile.setScale(20, 1).refreshBody();
+        let groundTile = ground.create(180, 600, 'ground');
+        groundTile.setScale(20, 3).refreshBody();
 
         // Tạo nhân vật
-        this.player = new Player(this, 50, 550);
+        this.player = new Player(this, 50, 500);
 
         // Tạo kẻ địch
-        this.enemy = new Enemy(this, this.scale.width - 50, 550);
+        this.enemy = new Enemy(this, this.scale.width - 50, 500);
 
         // Biến quản lý máu nhân vật
         this.playerHP = 3;
