@@ -31,18 +31,16 @@ export default class MainScene extends Phaser.Scene {
         // Tạo nhân vật
         this.player = new Player(this, 50, 550);
 
-        // Biến kiểm soát trạng thái bị đánh
-        this.isHit = false;
-
-        // // Tạo vật phẩm (stars)
-        // this.stars = new Star(this);
-
         // Tạo kẻ địch
         this.enemy = new Enemy(this, this.scale.width - 50, 550);
 
         // Biến quản lý máu nhân vật
-        this.playerHP = 3; // Nhân vật có 3 máu ban đầu
+        this.playerHP = 3;
         this.hpText = this.add.text(16, 40, 'HP: ' + this.playerHP, { fontSize: '20px', fill: '#fff' });
+
+        // Khởi tạo điểm số
+        this.score = 0;
+        this.scoreText = this.add.text(16, 16, 'Score: ' + this.score, { fontSize: '20px', fill: '#fff' });
 
         // Xử lý va chạm giữa các đối tượng
         this.physics.add.collider(this.player, ground);
@@ -102,13 +100,14 @@ export default class MainScene extends Phaser.Scene {
     }
 
     handlePlayerEnemyCollision(player, enemy) {
-        if (player.body.velocity.y > 0 && player.body.bottom < enemy.body.top + 5) {
+        if (player.body.velocity.y > 0 && player.body.bottom <= enemy.body.top + 10) {
+            console.log("⭐ Số điểm ban đầu của bạn: " + this.score);
             console.log("💥 Kẻ địch bị tiêu diệt!");
 
-            // Vô hiệu hóa va chạm để tránh lỗi tiếp tục va chạm sau khi bị tiêu diệt
+            // Vô hiệu hóa và xóa kẻ địch khỏi game
             enemy.body.enable = false;
-
-            // Xóa kẻ địch khỏi game
+            enemy.setActive(false);
+            enemy.setVisible(false);
             enemy.destroy();
 
             // Phản hồi cho nhân vật: bật lên nhẹ
@@ -116,13 +115,14 @@ export default class MainScene extends Phaser.Scene {
 
             // Tăng điểm số
             this.score += 10;
-            this.scoreText.setText('Score: ' + this.score);
-
-            // Kiểm tra nếu tất cả kẻ địch đã bị tiêu diệt
-            let enemiesLeft = this.children.getChildren().some(child => child instanceof Enemy);
-            if (!enemiesLeft) {
-                this.youWon();
+            if (this.scoreText) {
+                this.scoreText.setText('Score: ' + this.score);
             }
+
+            console.log("⭐ Số điểm khi hoàn thành game của bạn: " + this.score);
+
+            // Dừng game và hiển thị "You Won"
+            this.youWon();
         } else {
             this.hitEnemy(player, enemy);
         }
@@ -163,13 +163,16 @@ export default class MainScene extends Phaser.Scene {
     }
 
     youWon() {
-        if (this.isGameOver) return; // Nếu game đã kết thúc, không làm gì nữa
+        if (this.isGameOver) return;
         this.isGameOver = true; // Đánh dấu trạng thái game over
 
         console.log("🎉 YOU WON!");
 
-        // Dừng tất cả chuyển động
+        // Dừng tất cả vật lý, nhưng đảm bảo update() không gọi enemy.update()
         this.physics.pause();
+
+        // Dừng nhân vật
+        this.player.setVelocity(0, 0);
 
         // Hiển thị thông báo chiến thắng
         this.add.text(this.scale.width / 2, this.scale.height / 2 - 50, 'YOU WON!', {
@@ -188,9 +191,11 @@ export default class MainScene extends Phaser.Scene {
 
         // Khi bấm nút Play Again, reset lại game đúng cách
         playAgainButton.on('pointerdown', () => {
-            this.scene.restart(); // Dùng cách này để đảm bảo mọi thứ được reset đúng cách
+            this.scene.restart();
         });
     }
+
+
 
 
     gameOver(reason) {
@@ -260,12 +265,23 @@ export default class MainScene extends Phaser.Scene {
         console.log("✅ Game restarted!");
     }
 
-
     update() {
         if (!this.isGameOver) {
             this.player.update();
+
+            // Kiểm tra nếu enemy vẫn còn tồn tại trước khi gọi update()
+            if (this.enemy && this.enemy.active) {
+                this.enemy.update();
+            }
         }
-        this.enemy.update();
-        // this.stars.update(); // Cập nhật sao (để xóa khi rơi khỏi màn hình)
     }
+
+
+    // update() {
+    //     if (!this.isGameOver) {
+    //         this.player.update();
+    //     }
+    //     this.enemy.update();
+    //     // this.stars.update(); // Cập nhật sao (để xóa khi rơi khỏi màn hình)
+    // }
 }
